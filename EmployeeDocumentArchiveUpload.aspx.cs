@@ -19,16 +19,16 @@ namespace EATL.WebClient.CommonUI
 {
     public partial class EmployeeDocumentArchiveUpload : System.Web.UI.Page
     {
-        static string employeeArchiveDetailCollSe = "employeeArchiveDetailCollSession";
+        static string employeeDocArchiveSession = "EmployeeDocumentArchiveSession";//employeeArchiveDetailCollSession
         int serial = 1;
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
             {               
                 long userID = Convert.ToInt64(Session["UserID"]);
-                long employeeIID = Convert.ToInt64(Session["EmployeeID"]);
-                lblSerial.Text = serial.ToString();                
-                Session[employeeArchiveDetailCollSe] = null;                
+                //long employeeIID = Convert.ToInt64(Session["EmployeeID"]);
+                lblSerial.Text = serial.ToString();
+                Session[employeeDocArchiveSession] = null;                
                 btnSave.Visible = false;
             }
         }                
@@ -37,46 +37,46 @@ namespace EATL.WebClient.CommonUI
         {
             if (txtDocumentName.Text != "")
             {
-                if (fileUploadEmpDocuments.PostedFile.FileName != "")
+                if (UploadedEmployeeFile.PostedFile.FileName != "")
                 {
                     lblMessage.Text = "";
-                    string filename = Path.GetFileName(fileUploadEmpDocuments.PostedFile.FileName);
-                    fileUploadEmpDocuments.SaveAs(Server.MapPath("Files/" + filename));
-                    List<EmployeeDocumentArchive> empDocumentArchiveDetailColl = CreateEmployeeDocumentArchiveDetail((int)EnumCollection.OperationName.AddNewData);
-                    lvEmpDocumentArchive.DataSource = empDocumentArchiveDetailColl;
+                    string filename = Path.GetFileName(UploadedEmployeeFile.PostedFile.FileName);
+                    UploadedEmployeeFile.SaveAs(Server.MapPath("Files/" + filename));     // "Files/"= folder name where document are saved in solution
+                    List<EmployeeDocumentArchive> empDocumentArchiveDetailCollection = LoadFileUploadListView((int)EnumCollection.OperationName.AddNewData);
+                    lvEmpDocumentArchive.DataSource = empDocumentArchiveDetailCollection;
                     lvEmpDocumentArchive.DataBind();
 
                     txtDocumentName.Text = "";
                     btnUpload.Visible = true;
                     btnSave.Visible = true;
-                    lblSerial.Text = Convert.ToString((empDocumentArchiveDetailColl.Count) + 1);                    
+                    lblSerial.Text = Convert.ToString((empDocumentArchiveDetailCollection.Count) + 1);                    
                 }
                 else
                 {
-                    lblMessage.Text = "Please select a Document for upload";
+                    lblMessage.Text = "Please Select a Document for upload";
                     lblMessage.ForeColor = System.Drawing.Color.Red;
                 }                
             }
             else
             {
-                lblMessage.Text = "Please Enter Document Name";
+                lblMessage.Text = "Please Enter Your Document Name";
                 lblMessage.ForeColor = System.Drawing.Color.Red;
             }
             
         }        
         
-        private List<EmployeeDocumentArchive> CreateEmployeeDocumentArchiveDetail(int operationNameID)
+        private List<EmployeeDocumentArchive> LoadFileUploadListView(int operationNameID)
         {
             using (HRMCommonFacade _facade = new HRMCommonFacade())
             {
-                List<EmployeeDocumentArchive> empDocumentArchiveDetailColl = (List<EmployeeDocumentArchive>)Session[employeeArchiveDetailCollSe];                
-                List<EmployeeDocumentArchive> empDocumentArchiveDetailList = _facade.GetEmployeeDocumentByEmpID(Convert.ToInt16(ddlEmployee.SelectedValue));
+                List<EmployeeDocumentArchive> empDocumentArchiveDetailCollection = (List<EmployeeDocumentArchive>)Session[employeeDocArchiveSession];
+                List<EmployeeDocumentArchive> EmployeeWiseDocumentArchiveDetail = _facade.GetEmployeeDocumentByEmpID(Convert.ToInt16(ddlEmployee.SelectedValue));
 
                 try
                 {
                     EmployeeDocumentArchive employeeDocumentArchive = new EmployeeDocumentArchive();
-                   
-                    string filename = Path.GetFileName(fileUploadEmpDocuments.PostedFile.FileName);
+
+                    string filename = Path.GetFileName(UploadedEmployeeFile.PostedFile.FileName);
                     string filePath = "Files/" + filename;
                     employeeDocumentArchive.IID = 0;
                     employeeDocumentArchive.EmployeeID = Convert.ToInt16(ddlEmployee.SelectedValue);
@@ -88,18 +88,18 @@ namespace EATL.WebClient.CommonUI
                     employeeDocumentArchive.UpdateBy = Convert.ToInt64(Session["UserID"]);
                     employeeDocumentArchive.Updatedate = DateTime.Now;
                     employeeDocumentArchive.IsRemove = true;
-                    
-                    if (empDocumentArchiveDetailColl != null)
+
+                    if (empDocumentArchiveDetailCollection != null)
                     {
-                        empDocumentArchiveDetailColl.Add(employeeDocumentArchive);
-                        Session[employeeArchiveDetailCollSe] = empDocumentArchiveDetailColl;
-                        return empDocumentArchiveDetailColl;
+                        empDocumentArchiveDetailCollection.Add(employeeDocumentArchive);
+                        Session[employeeDocArchiveSession] = empDocumentArchiveDetailCollection;
+                        return empDocumentArchiveDetailCollection;
                     }
                     else
                     {
-                        empDocumentArchiveDetailList.Add(employeeDocumentArchive);
-                        Session[employeeArchiveDetailCollSe] = empDocumentArchiveDetailList;
-                        return empDocumentArchiveDetailList;
+                        EmployeeWiseDocumentArchiveDetail.Add(employeeDocumentArchive);
+                        Session[employeeDocArchiveSession] = EmployeeWiseDocumentArchiveDetail;
+                        return EmployeeWiseDocumentArchiveDetail;
                     }
                 }
                 catch (Exception ex)
@@ -163,55 +163,39 @@ namespace EATL.WebClient.CommonUI
         {
             try
             {
+                List<EmployeeDocumentArchive> employeeDocumentArchiveColl = (List<EmployeeDocumentArchive>)Session[employeeDocArchiveSession];
+                List<EmployeeDocumentArchive> employeeDocumentArchiveDetail = new List<EmployeeDocumentArchive>();
+
+                if (employeeDocumentArchiveColl == null)
+                {
+                    using (HRMCommonFacade facade = new HRMCommonFacade())
+                    {
+                        long EmployeeId = Convert.ToInt16(ddlEmployee.SelectedValue);
+                        employeeDocumentArchiveColl = facade.GetEmployeeDocumentByEmpID(EmployeeId);
+                    }
+                }
+
                 if (e.CommandName == "DeleteData")
-                { 
+                {
                     long EmployeeDocumentArchiveDetailID = Convert.ToInt64(e.CommandArgument);
                     hdEmployeeDocumentArchiveDetailID.Value = EmployeeDocumentArchiveDetailID.ToString();
 
-                    List<EmployeeDocumentArchive> employeeDocumentArchiveColl = (List<EmployeeDocumentArchive>)Session[employeeArchiveDetailCollSe];
-                    List<EmployeeDocumentArchive> employeeDocumentArchiveDetail = new List<EmployeeDocumentArchive>();
-                    
-                    if (employeeDocumentArchiveColl == null )
-                    {
-                        using (HRMCommonFacade facade = new HRMCommonFacade())
-                        {
-                            long EmployeeId = Convert.ToInt16(ddlEmployee.SelectedValue);                            
-                            employeeDocumentArchiveColl = facade.GetEmployeeDocumentByEmpID(EmployeeId);
-                        }                        
-                    }
-
                     EmployeeDocumentArchive employeeDocumentArchive = employeeDocumentArchiveColl.Where(detail => detail.IID == EmployeeDocumentArchiveDetailID).SingleOrDefault();
                     if (employeeDocumentArchive != null)
-                    {                       
+                    {
                         employeeDocumentArchiveColl.Remove(employeeDocumentArchive);
-                        Session[employeeArchiveDetailCollSe] = employeeDocumentArchiveColl;
+                        Session[employeeDocArchiveSession] = employeeDocumentArchiveColl;
                         lvEmpDocumentArchive.DataSource = employeeDocumentArchiveColl;
                         lvEmpDocumentArchive.DataBind();
                         btnSave.Visible = true;
                         lblSerial.Text = Convert.ToString((employeeDocumentArchiveColl.Count) + 1);
                     }
-                    else
-                    {
-                        lblMessage.Text = " Please try again.";
-                    }
                 }
 
-                else if (e.CommandName == "Download")
+                if (e.CommandName == "Download")
                 {
                     long EmployeeDocumentArchiveDetailID = Convert.ToInt64(e.CommandArgument);
                     hdEmployeeDocumentArchiveDetailID.Value = EmployeeDocumentArchiveDetailID.ToString();
-
-                    List<EmployeeDocumentArchive> employeeDocumentArchiveColl = (List<EmployeeDocumentArchive>)Session[employeeArchiveDetailCollSe];
-                    List<EmployeeDocumentArchive> employeeDocumentArchiveDetail = new List<EmployeeDocumentArchive>();
-
-                    if (employeeDocumentArchiveColl == null)
-                    {
-                        using (HRMCommonFacade facade = new HRMCommonFacade())
-                        {
-                            long EmployeeId = Convert.ToInt16(ddlEmployee.SelectedValue);
-                            employeeDocumentArchiveColl = facade.GetEmployeeDocumentByEmpID(EmployeeId);
-                        }
-                    }
 
                     EmployeeDocumentArchive employeeDocumentArchive = employeeDocumentArchiveColl.Where(detail => detail.IID == EmployeeDocumentArchiveDetailID).SingleOrDefault();
                     if (employeeDocumentArchive != null)
@@ -222,13 +206,9 @@ namespace EATL.WebClient.CommonUI
                         Response.TransmitFile(Server.MapPath(filePath));
                         Response.End();
                         lblMessage.Text = "";
+
                     }
-                }
-                else
-                {
-                    lblMessage.Text = "Please Try Again";
-                    lblMessage.ForeColor = System.Drawing.Color.Red;
-                }               
+                }                                             
                 
             }
             catch (Exception ex)
@@ -238,19 +218,19 @@ namespace EATL.WebClient.CommonUI
             }
         }
 
-        private void FillEmployeeDocumentArchiveDetail(EmployeeDocumentArchive employeeDocumentArchive)
-        {
-            try
-            {                
-                txtDocumentName.Text = employeeDocumentArchive.DocumentName;
-                lblSerial.Text = employeeDocumentArchive.SerialNo.ToString();
-            }
-            catch (Exception ex)
-            {
-                lblMessage.Text = "Error : " + ex.Message;
-                lblMessage.ForeColor = System.Drawing.Color.Red;
-            }
-        }
+        //private void FillEmployeeDocumentArchiveDetail(EmployeeDocumentArchive employeeDocumentArchive)
+        //{
+        //    try
+        //    {                
+        //        txtDocumentName.Text = employeeDocumentArchive.DocumentName;
+        //        lblSerial.Text = employeeDocumentArchive.SerialNo.ToString();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        lblMessage.Text = "Error : " + ex.Message;
+        //        lblMessage.ForeColor = System.Drawing.Color.Red;
+        //    }
+        //}
 
         protected void btnSave_Click(object sender, EventArgs e)
         {
@@ -267,27 +247,27 @@ namespace EATL.WebClient.CommonUI
                         DeleteExistingData(Convert.ToInt64(ddlEmployee.SelectedValue));
                     }
 
-                    List<EmployeeDocumentArchive> employeeDocumentArchiveDetailColl1 = new List<EmployeeDocumentArchive>();                  
-                    employeeDocumentArchiveDetailColl1 = (List<EmployeeDocumentArchive>)Session[employeeArchiveDetailCollSe];
+                    List<EmployeeDocumentArchive> employeeDocumentArchiveDetailData = new List<EmployeeDocumentArchive>();
+                    employeeDocumentArchiveDetailData = (List<EmployeeDocumentArchive>)Session[employeeDocArchiveSession];
 
                     foreach (ListViewItem item in lvEmpDocumentArchive.Items)
                     {
-                        EmployeeDocumentArchive ent = new EmployeeDocumentArchive();
-                        ent.IID = 0;
-                        ent.EmployeeID = Convert.ToInt64(ddlEmployee.SelectedValue);
-                        ent.SerialNo = Convert.ToInt32(((Label)item.FindControl("lblSerialNolv")).Text);
-                        ent.DocumentName = ((Label)item.FindControl("lblDocumentName")).Text;
-                        ent.FilePath = ((Label)item.FindControl("lblFilePath")).Text;
-                        ent.CreateBy = Convert.ToInt64(Session["UserID"]);
-                        ent.CreateDate = DateTime.Now;
-                        ent.UpdateBy = Convert.ToInt64(Session["UserID"]);
-                        ent.Updatedate = DateTime.Now;
-                        ent.IsRemove = false;
-                        facade.AddEmployeeDocumentArchive(ent);
+                        EmployeeDocumentArchive empDocumentArchive = new EmployeeDocumentArchive();
+                        empDocumentArchive.IID = 0;
+                        empDocumentArchive.EmployeeID = Convert.ToInt64(ddlEmployee.SelectedValue);
+                        empDocumentArchive.SerialNo = Convert.ToInt32(((Label)item.FindControl("lblSerialNolv")).Text);
+                        empDocumentArchive.DocumentName = ((Label)item.FindControl("lblDocumentName")).Text;
+                        empDocumentArchive.FilePath = ((Label)item.FindControl("lblFilePath")).Text;
+                        empDocumentArchive.CreateBy = Convert.ToInt64(Session["UserID"]);
+                        empDocumentArchive.CreateDate = DateTime.Now;
+                        empDocumentArchive.UpdateBy = Convert.ToInt64(Session["UserID"]);
+                        empDocumentArchive.Updatedate = DateTime.Now;
+                        empDocumentArchive.IsRemove = false;
+                        facade.AddEmployeeDocumentArchive(empDocumentArchive);
                        
                     }
 
-                    Session[employeeArchiveDetailCollSe] = null;
+                    Session[employeeDocArchiveSession] = null;
                     lblMessage.Text = "Data Saved Successfully";
                     lblMessage.ForeColor = System.Drawing.Color.Green;
                     ClearAllDataField();

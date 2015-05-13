@@ -85,13 +85,13 @@ namespace EATL.WebClient.CommonUI {
         protected global::System.Web.UI.WebControls.TextBox txtDocumentName;
         
         /// <summary>
-        /// fileUploadEmpDocuments control.
+        /// UploadedEmployeeFile control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.FileUpload fileUploadEmpDocuments;
+        protected global::System.Web.UI.WebControls.FileUpload UploadedEmployeeFile;
         
         /// <summary>
         /// btnUpload control.

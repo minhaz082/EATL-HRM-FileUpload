@@ -92,7 +92,7 @@
                     <td class="style1">
                     </td>
                     <td align="left">
-                        <asp:FileUpload ID="fileUploadEmpDocuments" runat="server" />
+                        <asp:FileUpload ID="UploadedEmployeeFile" runat="server" />
                     </td>
                 </tr>
                 <tr>
