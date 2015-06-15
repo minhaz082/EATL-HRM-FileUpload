@@ -14,22 +14,22 @@ using System.Runtime.Serialization;
 using EATL.BLL;
 using System.Data.SqlClient;
 using System.Data;
+using System.Configuration;
 
 namespace EATL.WebClient.CommonUI
 {
     public partial class EmployeeDocumentArchiveUpload : System.Web.UI.Page
     {
-        static string employeeDocArchiveSession = "EmployeeDocumentArchiveSession";//employeeArchiveDetailCollSession
+        static string employeeDocArchiveSession = "EmployeeDocumentArchiveSession";
         int serial = 1;
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
             {               
-                long userID = Convert.ToInt64(Session["UserID"]);
-                //long employeeIID = Convert.ToInt64(Session["EmployeeID"]);
+                long userID = Convert.ToInt64(Session["UserID"]);                
                 lblSerial.Text = serial.ToString();
                 Session[employeeDocArchiveSession] = null;                
-                btnSave.Visible = false;
+                btnSave.Visible = false;                
             }
         }                
 
@@ -41,7 +41,12 @@ namespace EATL.WebClient.CommonUI
                 {
                     lblMessage.Text = "";
                     string filename = Path.GetFileName(UploadedEmployeeFile.PostedFile.FileName);
-                    UploadedEmployeeFile.SaveAs(Server.MapPath("Files/" + filename));     // "Files/"= folder name where document are saved in solution
+                    string EmployeeDocumentFolderPath = ConfigurationManager.AppSettings["EmployeeDocumentFolderPath"];
+                    string FilePath = Server.MapPath(EmployeeDocumentFolderPath +"/"+ filename);
+
+                    //UploadedEmployeeFile.SaveAs(Server.MapPath("EmployeesDocument/" + filename));
+                    // "Files/"= folder name where document are saved in solution
+                    UploadedEmployeeFile.SaveAs(FilePath);     // "Files/"= folder name where document are saved in solution
                     List<EmployeeDocumentArchive> empDocumentArchiveDetailCollection = LoadFileUploadListView((int)EnumCollection.OperationName.AddNewData);
                     lvEmpDocumentArchive.DataSource = empDocumentArchiveDetailCollection;
                     lvEmpDocumentArchive.DataBind();
@@ -77,12 +82,17 @@ namespace EATL.WebClient.CommonUI
                     EmployeeDocumentArchive employeeDocumentArchive = new EmployeeDocumentArchive();
 
                     string filename = Path.GetFileName(UploadedEmployeeFile.PostedFile.FileName);
-                    string filePath = "Files/" + filename;
+                    // ifteraz
+                    string EmployeeDocumentFolderPath = ConfigurationManager.AppSettings["EmployeeDocumentFolderPath"];
+                    string FilePath = Server.MapPath(EmployeeDocumentFolderPath + filename);
+                    //ifteraz
+                    //string filePath = "EmployeesDocument/" + filename;
+                    
                     employeeDocumentArchive.IID = 0;
                     employeeDocumentArchive.EmployeeID = Convert.ToInt16(ddlEmployee.SelectedValue);
                     employeeDocumentArchive.DocumentName = txtDocumentName.Text.Trim();
                     employeeDocumentArchive.SerialNo = Convert.ToInt16(lblSerial.Text);
-                    employeeDocumentArchive.FilePath = filePath.Trim();
+                    employeeDocumentArchive.FilePath = FilePath.Trim();
                     employeeDocumentArchive.CreateBy = Convert.ToInt64(Session["UserID"]);
                     employeeDocumentArchive.CreateDate = DateTime.Now;
                     employeeDocumentArchive.UpdateBy = Convert.ToInt64(Session["UserID"]);
@@ -195,17 +205,29 @@ namespace EATL.WebClient.CommonUI
                 if (e.CommandName == "Download")
                 {
                     long EmployeeDocumentArchiveDetailID = Convert.ToInt64(e.CommandArgument);
-                    hdEmployeeDocumentArchiveDetailID.Value = EmployeeDocumentArchiveDetailID.ToString();
+                    
 
                     EmployeeDocumentArchive employeeDocumentArchive = employeeDocumentArchiveColl.Where(detail => detail.IID == EmployeeDocumentArchiveDetailID).SingleOrDefault();
                     if (employeeDocumentArchive != null)
                     {
-                        string filePath = employeeDocumentArchive.FilePath.ToString();
-                        Response.ContentType = "image/jpg";
-                        Response.AddHeader("Content-Disposition", "attachment;filename=\"" + filePath + "\"");
-                        Response.TransmitFile(Server.MapPath(filePath));
-                        Response.End();
-                        lblMessage.Text = "";
+                        string filePath = employeeDocumentArchive.FilePath.ToString();                       
+                        string EmployeeDocumentFolderPath = ConfigurationManager.AppSettings["EmployeeDocumentFolderPath"];
+                        string[] filePathsAll = Directory.GetFiles(Server.MapPath(EmployeeDocumentFolderPath));
+                        if (filePathsAll.Contains(filePath))
+                        {
+                            lblMessage.Text = "";
+                            Response.ContentType = "application/octect-stream";
+                            //Response.AppendHeader("Content-Disposition", "attachment; filename=" + Path.GetFileName(filePath));
+                            Response.AppendHeader("Content-Disposition", "attachment; filename=\"" + Path.GetFileName(filePath) + "\"");
+                            Response.WriteFile(filePath);
+                            Response.End();                        
+                        }
+                        else
+                        {
+                            lblMessage.Text = "File not found Please Upload the file again";
+                            lblMessage.ForeColor = System.Drawing.Color.Red;
+                        }
+                        
 
                     }
                 }                                             
@@ -216,21 +238,7 @@ namespace EATL.WebClient.CommonUI
                 lblMessage.Text = "Error : " + ex.Message;
                 lblMessage.ForeColor = System.Drawing.Color.Red;
             }
-        }
-
-        //private void FillEmployeeDocumentArchiveDetail(EmployeeDocumentArchive employeeDocumentArchive)
-        //{
-        //    try
-        //    {                
-        //        txtDocumentName.Text = employeeDocumentArchive.DocumentName;
-        //        lblSerial.Text = employeeDocumentArchive.SerialNo.ToString();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        lblMessage.Text = "Error : " + ex.Message;
-        //        lblMessage.ForeColor = System.Drawing.Color.Red;
-        //    }
-        //}
+        }       
 
         protected void btnSave_Click(object sender, EventArgs e)
         {
@@ -270,7 +278,7 @@ namespace EATL.WebClient.CommonUI
                     Session[employeeDocArchiveSession] = null;
                     lblMessage.Text = "Data Saved Successfully";
                     lblMessage.ForeColor = System.Drawing.Color.Green;
-                    ClearAllDataField();
+                    ClearAllDataField();                   
                 }
             }
             catch (Exception ex)

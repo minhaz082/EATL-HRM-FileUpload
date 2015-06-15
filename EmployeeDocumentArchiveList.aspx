@@ -1,8 +1,7 @@
-﻿<%@ Page Title="" Language="C#" MasterPageFile="~/HRM.Master" AutoEventWireup="true"
-    EnableEventValidation="false" CodeBehind="EmployeeDocumentArchiveUpload.aspx.cs"
-    Inherits="EATL.WebClient.CommonUI.EmployeeDocumentArchiveUpload" %>
-
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/HRM.Master" AutoEventWireup="true" EnableEventValidation="false"
+CodeBehind="EmployeeDocumentArchiveList.aspx.cs" Inherits="EATL.WebClient.CommonUI.EmployeeDocumentArchiveList" %>
 <%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="cc1" %>
+
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
     <style type="text/css">
         .style1
@@ -28,7 +27,7 @@
         <div>
             <center>
                 <h3>
-                    ::--Employee's  Document Archive--::</h3>
+                    ::--Employee's  Document Archive List--::</h3>
             </center>
         </div><br />
         <div>
@@ -73,40 +72,6 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="style1">
-                        Serial :
-                    </td>
-                    <td align="left">
-                        <asp:Label ID="lblSerial" runat="server"></asp:Label>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="style1">
-                        Document Name :
-                    </td>
-                    <td align="left">
-                        <asp:TextBox ID="txtDocumentName" runat="server" Width="250px"></asp:TextBox>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="style1">
-                    </td>
-                    <td align="left">
-                        <asp:FileUpload ID="UploadedEmployeeFile" runat="server" />
-                    </td>
-                </tr>
-                <tr>
-                    <td class="style1">
-                    </td>
-                    <td align="left">
-                        <asp:Button ID="btnUpload" runat="server" Text="Upload" OnClick="btnUpload_Click"
-                            Width="100px" />
-                        <asp:Button ID="btnCancel" runat="server" Text="Cancel" OnClick="btnCancel_Click"
-                            CausesValidation="False" Width="100px" />                        
-                        <asp:HiddenField runat="server" ID="hdEmployeeDocumentArchiveID" />
-                        <asp:HiddenField runat="server" ID="hdEmployeeDocumentArchiveDetailID" />                       
-                </tr>
-                <tr>
                     <td class="style2">
                         &nbsp;
                     </td>
@@ -118,8 +83,8 @@
             <table width="100%">
                 <tr>
                     <td>
-                        <asp:ListView ID="lvEmpDocumentArchive" runat="server" DataKeyNames="IID" OnItemDataBound="lvEmpDocumentArchive_ItemDataBound"
-                            OnItemCommand="lvEmpDocumentArchive_ItemCommand">
+                        <asp:ListView ID="lvEmpDocumentArchive" runat="server" DataKeyNames="IID" 
+                            OnItemCommand="lvEmpDocumentArchive_ItemCommand" OnItemDataBound="lvEmpDocumentArchive_ItemDataBound" >
                             <LayoutTemplate>
                                 <table border="0" cellpadding="0" cellspacing="1" width="100%" style="border-style: none">
                                     <tr class="dGridHeaderClass" id="tr1" runat="server">
@@ -138,7 +103,7 @@
                                         <th id="th3" runat="server" align="center">
                                             View
                                         </th>
-                                        <th id="th9" runat="server" align="center">
+                                        <th id="th9" runat="server" align="center" visible="false">
                                             Change
                                         </th>
                                     </tr>
@@ -164,7 +129,7 @@
                                     <td align="center">
                                         <asp:LinkButton ID="lnkDownload" runat="server" Text="Download"></asp:LinkButton>
                                     </td>
-                                    <td align="center" valign="middle">
+                                    <td align="center" valign="middle" visible="false">
                                         <asp:LinkButton ID="lnkModify" CausesValidation="false" Text="Delete" runat="server"></asp:LinkButton>
                                     </td>
                                 </tr>
@@ -188,7 +153,7 @@
                                     <td align="center">
                                         <asp:LinkButton ID="lnkDownload" runat="server" Text="Download"></asp:LinkButton>
                                     </td>
-                                    <td align="center" valign="middle">
+                                    <td align="center" valign="middle" visible="false">
                                         <asp:LinkButton ID="lnkModify" CausesValidation="false" Text="Delete" runat="server"></asp:LinkButton>
                                     </td>
                                 </tr>
@@ -208,13 +173,9 @@
                 <tr>
                     <td>
                     </td>
-                </tr>
-                <tr>
-                    <td align="left">
-                        <asp:Button ID="btnSave" runat="server" Text="Save" OnClick="btnSave_Click" Width="100px" />
-                    </td>
-                </tr>
+                </tr>                
             </table>
         </div>
     </div>
 </asp:Content>
+
